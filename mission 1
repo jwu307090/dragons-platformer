@@ -1,0 +1,43 @@
+import random
+
+
+def generate_game_elements(grid_size=10):
+    all_coords = [(r, c) for r in range(grid_size) for c in range(grid_size)]
+    all_coords.remove((0, 0))
+    all_coords.remove((9, 9))
+    
+    random.shuffle(all_coords)
+
+
+    items = {}
+    enemies = []
+
+
+    items[(9, 9)] = MapItem(9, 9, "SafeZone")
+
+
+    for _ in range(8):
+        pos = all_coords.pop()
+        items[pos] = MapItem(pos[0], pos[1], "Treasure")
+
+
+    for _ in range(3):
+        pos = all_coords.pop()
+        items[pos] = MapItem(pos[0], pos[1], "PowerUp")
+
+
+    for _ in range(6):
+        pos = all_coords.pop()
+        enemies.append(Enemy(pos[0], pos[1], "Minion"))
+
+
+    for _ in range(1):
+        pos = all_coords.pop()
+        enemies.append(Enemy(pos[0], pos[1], "Boss"))
+
+
+    enemy_count = len(enemies)
+    treasure_count = sum(1 for item in items.values() if item.kind == "Treasure")
+    
+    print(f"Generated {enemy_count} enemies and {treasure_count} treasures.")
+    return items, enemies
