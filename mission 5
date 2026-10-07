@@ -1,0 +1,85 @@
+class Dragon:
+    def __init__(self, name="Inferno"):
+        self.name = name
+        self.max_health = 100
+        self.health = 100
+        self.score = 0
+        self.x = 0
+        self.y = 0
+        self.shield_active = False
+        self.shield_used = False
+
+
+    def take_damage(self, amount):
+        if self.shield_active:
+            amount = amount // 2
+            self.shield_active = False
+            msg = f"Took {amount} damage."
+        else:
+            msg = f"Took {amount} damage."
+      
+        self.health = max(0, self.health - amount)
+        return amount, msg
+
+
+    def heal(self, amount):
+        self.health = min(self.max_health, self.health + amount)
+        return f"+ {amount} HP."
+
+
+    def add_score(self, amount):
+        self.score += amount
+        return f"+ {amount} Score."
+
+
+
+
+class Enemy:
+    def __init__(self, x, y, enemy_type="Minion"):
+        self.x = x
+        self.y = y
+        self.type = enemy_type
+        if enemy_type == "Boss":
+            self.symbol = "B"
+            self.damage = 25
+            self.name = "Boss"
+        else:
+            self.symbol = "M"
+            self.damage = 15
+            self.name = "Minion"
+
+
+    def step_towards_dragon(self, dragon_x, dragon_y, grid_size, blocked_positions):
+        dx, dy = 0, 0
+        if self.x < dragon_x: dx = 1
+        elif self.x > dragon_x: dx = -1
+
+
+        if self.y < dragon_y: dy = 1
+        elif self.y > dragon_y: dy = -1
+
+
+        possible_moves = []
+        if dx != 0: possible_moves.append((self.x + dx, self.y))
+        if dy != 0: possible_moves.append((self.x, self.y + dy))
+
+
+        random.shuffle(possible_moves)
+
+
+        for nx, ny in possible_moves:
+            if 0 <= nx < grid_size and 0 <= ny < grid_size:
+                if (nx, ny) not in blocked_positions:
+                    self.x, self.y = nx, ny
+                    break
+
+
+
+
+class MapItem:
+    def __init__(self, x, y, kind):
+        self.x = x
+        self.y = y
+        self.kind = kind
+        symbols = {"Treasure": "T", "PowerUp": "P", "SafeZone": "S"}
+        self.symbol = symbols.get(kind, "?")
