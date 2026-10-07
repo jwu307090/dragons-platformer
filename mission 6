@@ -1,0 +1,123 @@
+class DragonCityGame:
+    def __init__(self, user_interface):
+        self.user_interface = user_interface
+        self.user_interface.title("Dragon City")
+        self.grid_size = 10
+      
+        self.dragon = Dragon()
+        self.enemies = []
+        self.items = {}
+        self.game_over = False
+
+
+        self.setup_ui()
+        self.generate_random_map()
+        self.render_grid()
+
+
+        self.user_interface.bind("<Key>", self.handle_keypress)
+
+
+    def generate_random_map(self):
+        self.dragon.x = 0
+        self.dragon.y = 0
+        self.dragon.health = 100
+        self.dragon.score = 0
+        self.dragon.shield_active = False
+        self.dragon.shield_used = False
+        self.game_over = False
+
+
+        self.enemies.clear()
+        self.items.clear()
+
+
+        all_coords = [(r, c) for r in range(self.grid_size) for c in range(self.grid_size)]
+        all_coords.remove((0, 0))
+        all_coords.remove((9, 9))
+        random.shuffle(all_coords)
+
+
+        self.items[(9, 9)] = MapItem(9, 9, "SafeZone")
+
+
+        for _ in range(8):
+            pos = all_coords.pop()
+            self.items[pos] = MapItem(pos[0], pos[1], "Treasure")
+
+
+        for _ in range(3):
+            pos = all_coords.pop()
+            self.items[pos] = MapItem(pos[0], pos[1], "PowerUp")
+
+
+        for _ in range(6):
+            pos = all_coords.pop()
+            self.enemies.append(Enemy(pos[0], pos[1], "Minion"))
+
+
+        for _ in range(1):
+            pos = all_coords.pop()
+            self.enemies.append(Enemy(pos[0], pos[1], "Boss"))
+
+
+        self.update_log("🎮 Map Randomized! Shield is single-use only per game.")
+        self.update_stats()
+
+
+    def run_enemy_ai(self, step_log):
+        blocked = set(self.items.keys())
+        for e in self.enemies:
+            blocked.add((e.x, e.y))
+
+
+        ambushes = []
+        defeated_enemies = []
+
+
+        for enemy in self.enemies:
+            blocked.discard((enemy.x, enemy.y))
+            enemy.step_towards_dragon(self.dragon.x, self.dragon.y, self.grid_size, blocked)
+            blocked.add((enemy.x, enemy.y))
+
+
+            if enemy.x == self.dragon.x and enemy.y == self.dragon.y:
+                dmg, _ = self.dragon.take_damage(enemy.damage)
+                ambushes.append(f"{enemy.symbol} {enemy.name} ambushed you (-{dmg} HP)!")
+                defeated_enemies.append(enemy)
+
+
+        for enemy in defeated_enemies:
+            self.enemies.remove(enemy)
+
+
+        if ambushes:
+            self.update_log(" | ".join(ambushes))
+        else:
+            self.update_log(step_log)
+
+
+    def activate_shield(self):
+        if not self.game_over and not self.dragon.shield_used and not self.dragon.shield_active:
+            self.dragon.shield_active = True
+            self.dragon.shield_used = True
+            self.update_stats()
+            self.render_grid()
+            self.update_log("🛡️ Shield activated! Block 50% damage on next hit (Single-use item used).")
+
+
+    setup_ui = setup_ui
+    render_grid = render_grid
+    handle_keypress = handle_keypress
+    move_player = move_player
+    update_stats = update_stats
+    update_log = update_log
+    restart_game = restart_game
+
+
+
+
+if __name__ == "__main__":
+    user_interface = tk.Tk()
+    game = DragonCityGame(user_interface)
+    user_interface.mainloop()
