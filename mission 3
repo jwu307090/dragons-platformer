@@ -1,0 +1,35 @@
+def update_stats(self):
+    shield_str = " 🛡️[SHIELD ACTIVE]" if self.dragon.shield_active else ""
+    self.stats_label.config(
+        text=f"HP: {self.dragon.health}/{self.dragon.max_health}{shield_str}  |  Score: {self.dragon.score}"
+    )
+
+
+    if self.dragon.shield_active:
+        self.ability_btn.config(
+            text="🛡️ Shield Active", state=tk.DISABLED,
+            disabledforeground="#2c3e50"
+        )
+    elif self.dragon.shield_used:
+        self.ability_btn.config(
+            text="🚫 Shield Used", state=tk.DISABLED,
+            disabledforeground="#7f8c8d"
+        )
+    else:
+        self.ability_btn.config(
+            text="🛡️ Shield Ready", state=tk.NORMAL,
+            fg="#000000"
+        )
+
+
+
+
+def update_log(self, text):
+    self.log_label.config(text=text)
+
+
+
+
+def restart_game(self):
+    self.generate_random_map()
+    self.render_grid()
