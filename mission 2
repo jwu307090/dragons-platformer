@@ -1,0 +1,80 @@
+def handle_keypress(self, event):
+    if self.game_over:
+        return
+
+
+    key = event.keysym.lower()
+    moves = {
+        'w': (-1, 0), 'up': (-1, 0),
+        's': (1, 0),  'down': (1, 0),
+        'a': (0, -1), 'left': (0, -1),
+        'd': (0, 1),  'right': (0, 1)
+    }
+
+
+    if key in moves:
+        dr, dc = moves[key]
+        self.move_player(dr, dc)
+
+
+
+
+def move_player(self, dr, dc):
+    new_x = self.dragon.x + dr
+    new_y = self.dragon.y + dc
+
+
+    if not (0 <= new_x < self.grid_size and 0 <= new_y < self.grid_size):
+        self.update_log("⚠️ Cannot move off the 10x10 map!")
+        return
+
+
+    self.dragon.x = new_x
+    self.dragon.y = new_y
+    current_pos = (new_x, new_y)
+    log_msg = "Moved."
+
+
+    if current_pos in self.items:
+        item = self.items[current_pos]
+        if item.kind == "SafeZone":
+            self.render_grid()
+            self.game_over = True
+            self.update_log("🏰 VICTORY! You escaped Dragon City!")
+            messagebox.showinfo("Victory!", f"🎉 WINNER!\nFinal Score: {self.dragon.score}\nHealth Left: {self.dragon.health}")
+            return
+        elif item.kind == "Treasure":
+            log_msg = self.dragon.add_score(100)
+            del self.items[current_pos]
+        elif item.kind == "PowerUp":
+            log_msg = self.dragon.heal(30)
+            del self.items[current_pos]
+
+
+    enemy_killed = None
+    for enemy in self.enemies:
+        if enemy.x == new_x and enemy.y == new_y:
+            dmg, fight_msg = self.dragon.take_damage(enemy.damage)
+            log_msg = f"{fight_msg} Defeated {enemy.name}!"
+            enemy_killed = enemy
+            break
+
+
+    if enemy_killed:
+        self.enemies.remove(enemy_killed)
+
+
+    self.run_enemy_ai(log_msg)
+
+
+    if self.dragon.health <= 0:
+        self.game_over = True
+        self.render_grid()
+        self.update_stats()
+        self.update_log("☠️ Dragon has fallen!")
+        messagebox.showerror("Game Over", "☠️ Health dropped to 0.")
+        return
+
+
+    self.render_grid()
+    self.update_stats()
